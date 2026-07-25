@@ -295,6 +295,16 @@
                     <input list="salesExecList" id="salesExecutive" readonly placeholder="Auto-filled">
                     <datalist id="salesExecList"></datalist>
                 </div>
+
+                <div class="form-group">
+                    <label for="parentDealerName">Parent Dealer Name</label>
+                    <input type="text" id="parentDealerName" readonly placeholder="Auto-filled">
+                </div>
+
+                <div class="form-group">
+                    <label for="parentDealerCode">Parent Dealer Code</label>
+                    <input type="text" id="parentDealerCode" readonly placeholder="Auto-filled">
+                </div>
             </div>
 
             <h3>Order Items</h3>
@@ -411,6 +421,8 @@
                     document.getElementById('clientType').value     = selected[6] || '';
                     document.getElementById('creditDays').value     = selected[7] || '';
                     document.getElementById('phoneNo').value        = selected[8] || '';
+                    document.getElementById('parentDealerName').value = selected[13] || '';
+                    document.getElementById('parentDealerCode').value = selected[14] || '';
                 } else {
                     document.getElementById('clientCode').value     = '';
                     document.getElementById('address').value        = '';
@@ -420,6 +432,8 @@
                     document.getElementById('clientType').value     = '';
                     document.getElementById('creditDays').value     = '';
                     document.getElementById('phoneNo').value        = '';
+                    document.getElementById('parentDealerName').value = '';
+                    document.getElementById('parentDealerCode').value = '';
                 }
             });
         }
@@ -578,6 +592,8 @@
             const address        = document.getElementById('address').value.trim();
             const leadTime       = document.getElementById('leadTime').value.trim();
             const salesExecutive = document.getElementById('salesExecutive').value.trim();
+            const parentDealerName = document.getElementById('parentDealerName').value.trim();
+            const parentDealerCode = document.getElementById('parentDealerCode').value.trim();
 
             const missing = [];
             if (!orderNumber)    missing.push('Order Number');
@@ -632,7 +648,8 @@
                 await callPost('submitOrder', {
                     orderNumber, orderDate, clientCode, clientName, clientType,
                     phoneNo, state, district, creditDays, modeOfPayment,
-                    address, leadTime, salesExecutive, items
+                    address, leadTime, salesExecutive, items,
+                    parentDealerName, parentDealerCode
                 });
                 alert("Order Submitted Successfully!");
                 window.location.reload();
