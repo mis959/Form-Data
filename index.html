@@ -318,7 +318,7 @@
         // Apni Apps Script Web App ki "/exec" URL yahan paste karo
         // (Deploy > New deployment > Web app ke baad milegi)
         // ============================================================
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_sTvtv6ElrVcP68ENsqiwC5QDeiXt9uUV0mnKAWOyQWZJPYFAsgKcVkgs3Gc1noc5SA/exec";
+        const SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 
         let itemData = [];
         let schemaList = [];
@@ -373,7 +373,7 @@
         async function initialize() {
             document.getElementById('orderDate').valueAsDate = new Date();
 
-            if (!SCRIPT_URL || SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbw_sTvtv6ElrVcP68ENsqiwC5QDeiXt9uUV0mnKAWOyQWZJPYFAsgKcVkgs3Gc1noc5SA/exec')) {
+            if (!SCRIPT_URL || SCRIPT_URL.includes('PASTE_YOUR')) {
                 setStatus('SCRIPT_URL set nahi hai — index.html me apna Apps Script Web App URL daalo.', true);
                 return;
             }
