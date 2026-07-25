@@ -362,7 +362,11 @@
             const name     = String(row[1] || '').trim();
             const district = String(row[3] || '').trim();
             const sales    = String(row[5] || '').trim();
-            return name + ' (' + district + ' - ' + sales + ')';
+            const parent   = String(row[13] || '').trim();
+            let label = name + ' (' + district + ' - ' + sales;
+            if (parent) label += ' - ' + parent;
+            label += ')';
+            return label;
         }
 
         function updateTotalQty() {
