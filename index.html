@@ -153,7 +153,7 @@
 
         .itemRow {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr auto;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
             gap: 12px;
             align-items: end;
             background: white;
@@ -246,7 +246,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="clientType">Client Type</label>
+                    <label for="clientType">Category</label>
                     <input type="text" id="clientType" readonly placeholder="Auto-filled">
                 </div>
 
@@ -266,7 +266,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="creditDays">Credit Days</label>
+                    <label for="creditDays">Credit Period</label>
                     <input type="text" id="creditDays" readonly placeholder="Auto-filled">
                 </div>
 
@@ -305,6 +305,16 @@
                     <label for="parentDealerCode">Parent Dealer Code</label>
                     <input type="text" id="parentDealerCode" readonly placeholder="Auto-filled">
                 </div>
+
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" readonly placeholder="Auto-filled">
+                </div>
+
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <input type="text" id="region" readonly placeholder="Auto-filled">
+                </div>
             </div>
 
             <h3>Order Items</h3>
@@ -313,7 +323,6 @@
             <div id="qtyTotal"></div>
 
             <datalist id="itemListData"></datalist>
-            <datalist id="schemaListData"></datalist>
 
             <div style="margin-top: 10px;">
                 <button type="button" class="btn add-btn" onclick="addItem()">+ Add Item</button>
@@ -331,7 +340,6 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_sTvtv6ElrVcP68ENsqiwC5QDeiXt9uUV0mnKAWOyQWZJPYFAsgKcVkgs3Gc1noc5SA/exec";
 
         let itemData = [];
-        let schemaList = [];
         let clientData = [];
 
         // ---------- Backend call helpers (google.script.run ki jagah fetch) ----------
@@ -358,12 +366,16 @@
             return json;
         }
 
+        // clientData row layout (0-indexed, matches Dealer Data columns B:P):
+        // 0 Party Code | 1 Party's Name | 2 Address | 3 City | 4 District | 5 STATE
+        // 6 Region | 7 Under (Sales Exec) | 8 Category | 9 Credit Period | 10 Dispatch Days
+        // 11 Phone No. | 12 Parent's Dealer | 13 Parent's Code | 14 Status
         function buildClientLabel(row) {
             const name     = String(row[1] || '').trim();
-            const district = String(row[3] || '').trim();
-            const sales    = String(row[5] || '').trim();
-            const parent   = String(row[13] || '').trim();
-            let label = name + ' (' + district + ' - ' + sales;
+            const district = String(row[4] || '').trim();
+            const under    = String(row[7] || '').trim();
+            const parent   = String(row[12] || '').trim();
+            let label = name + ' (' + district + ' - ' + under;
             if (parent) label += ' - ' + parent;
             label += ')';
             return label;
@@ -395,16 +407,14 @@
             setStatus('Loading data...', false);
 
             try {
-                const [items, salesPersons, schemas, clients] = await Promise.all([
+                const [items, salesPersons, clients] = await Promise.all([
                     callGet('getItemData'),
                     callGet('getSalesPersons'),
-                    callGet('getSchemas'),
                     callGet('getClientData')
                 ]);
 
                 setItemData(items);
                 setSalesPersons(salesPersons);
-                setSchemaList(schemas);
                 setClientData(clients);
 
                 setStatus('', false);
@@ -417,25 +427,29 @@
                 const selected = clientData.find(r => buildClientLabel(r) === typed);
 
                 if (selected) {
-                    document.getElementById('clientCode').value     = selected[0] || '';
-                    document.getElementById('address').value        = selected[2] || '';
-                    document.getElementById('district').value       = selected[3] || '';
-                    document.getElementById('state').value          = selected[4] || '';
-                    document.getElementById('salesExecutive').value = selected[5] || '';
-                    document.getElementById('clientType').value     = selected[6] || '';
-                    document.getElementById('creditDays').value     = selected[7] || '';
-                    document.getElementById('phoneNo').value        = selected[8] || '';
-                    document.getElementById('parentDealerName').value = selected[13] || '';
-                    document.getElementById('parentDealerCode').value = selected[14] || '';
+                    document.getElementById('clientCode').value       = selected[0] || '';
+                    document.getElementById('address').value          = selected[2] || '';
+                    document.getElementById('city').value             = selected[3] || '';
+                    document.getElementById('district').value         = selected[4] || '';
+                    document.getElementById('state').value            = selected[5] || '';
+                    document.getElementById('region').value           = selected[6] || '';
+                    document.getElementById('salesExecutive').value   = selected[7] || '';
+                    document.getElementById('clientType').value       = selected[8] || '';
+                    document.getElementById('creditDays').value       = selected[9] || '';
+                    document.getElementById('phoneNo').value          = selected[11] || '';
+                    document.getElementById('parentDealerName').value = selected[12] || '';
+                    document.getElementById('parentDealerCode').value = selected[13] || '';
                 } else {
-                    document.getElementById('clientCode').value     = '';
-                    document.getElementById('address').value        = '';
-                    document.getElementById('district').value       = '';
-                    document.getElementById('state').value          = '';
-                    document.getElementById('salesExecutive').value = '';
-                    document.getElementById('clientType').value     = '';
-                    document.getElementById('creditDays').value     = '';
-                    document.getElementById('phoneNo').value        = '';
+                    document.getElementById('clientCode').value       = '';
+                    document.getElementById('address').value          = '';
+                    document.getElementById('city').value             = '';
+                    document.getElementById('district').value         = '';
+                    document.getElementById('state').value            = '';
+                    document.getElementById('region').value           = '';
+                    document.getElementById('salesExecutive').value   = '';
+                    document.getElementById('clientType').value       = '';
+                    document.getElementById('creditDays').value       = '';
+                    document.getElementById('phoneNo').value          = '';
                     document.getElementById('parentDealerName').value = '';
                     document.getElementById('parentDealerCode').value = '';
                 }
@@ -456,25 +470,16 @@
             });
         }
 
+        // itemData row layout (0-indexed, matches Item Details columns A:K):
+        // 0 SKU Code | 1 Item Name | 2 Brand Name | 3 Category | 4 Under
+        // 5 Sub Category | 6 Paint Type | 7 Ltr/Kg | 8 Colour | 9 Status | 10 Scheme No.
         function setItemData(data) {
             itemData = data;
             const dl = document.getElementById('itemListData');
             dl.innerHTML = '';
             itemData.forEach(row => {
                 const opt = document.createElement('option');
-                opt.value = row[0];
-                dl.appendChild(opt);
-            });
-            if (itemData.length > 0 && schemaList.length > 0) addItem();
-        }
-
-        function setSchemaList(list) {
-            schemaList = list;
-            const dl = document.getElementById('schemaListData');
-            dl.innerHTML = '';
-            schemaList.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s;
+                opt.value = row[1];
                 dl.appendChild(opt);
             });
             if (itemData.length > 0 && document.querySelectorAll('.itemRow').length === 0) {
@@ -541,21 +546,22 @@
             const col5 = document.createElement('div');
             col5.innerHTML = '<label>Schema</label>';
             const schemaInput = document.createElement('input');
-            schemaInput.setAttribute('list', 'schemaListData');
+            schemaInput.type = 'text';
             schemaInput.name = 'schema';
-            schemaInput.required = true;
-            schemaInput.placeholder = 'Select/Type Schema';
-            schemaInput.value = 'NULL';
+            schemaInput.placeholder = 'Auto-filled';
+            schemaInput.readOnly = true;
             col5.appendChild(schemaInput);
 
             itemInput.oninput = function () {
-                const selected = itemData.find(r => r[0] === this.value);
+                const selected = itemData.find(r => r[1] === this.value);
                 if (selected) {
-                    skuInput.value  = selected[1] || '';
-                    unitInput.value = selected[2] || '';
+                    skuInput.value    = selected[0] || '';
+                    unitInput.value   = selected[3] || '';
+                    schemaInput.value = selected[10] || '';
                 } else {
-                    skuInput.value  = '';
-                    unitInput.value = '';
+                    skuInput.value    = '';
+                    unitInput.value   = '';
+                    schemaInput.value = '';
                 }
             };
 
@@ -598,17 +604,19 @@
             const salesExecutive = document.getElementById('salesExecutive').value.trim();
             const parentDealerName = document.getElementById('parentDealerName').value.trim();
             const parentDealerCode = document.getElementById('parentDealerCode').value.trim();
+            const city            = document.getElementById('city').value.trim();
+            const region          = document.getElementById('region').value.trim();
 
             const missing = [];
             if (!orderNumber)    missing.push('Order Number');
             if (!orderDate)      missing.push('Order Date');
             if (!clientName)     missing.push('Client Name');
             if (!clientCode)     missing.push('Client Code (select a valid client from the list)');
-            if (!clientType)     missing.push('Client Type');
+            if (!clientType)     missing.push('Category');
             if (!phoneNo)        missing.push('Phone No.');
             if (!state)          missing.push('State');
             if (!district)       missing.push('District');
-            if (!creditDays)     missing.push('Credit Days');
+            if (!creditDays)     missing.push('Credit Period');
             if (!modeOfPayment)  missing.push('Mode of Payment');
             if (!address)        missing.push('Address');
             if (!leadTime)       missing.push('Lead Time');
@@ -653,7 +661,7 @@
                     orderNumber, orderDate, clientCode, clientName, clientType,
                     phoneNo, state, district, creditDays, modeOfPayment,
                     address, leadTime, salesExecutive, items,
-                    parentDealerName, parentDealerCode
+                    parentDealerName, parentDealerCode, city, region
                 });
                 alert("Order Submitted Successfully!");
                 window.location.reload();
