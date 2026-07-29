@@ -152,15 +152,38 @@
         }
 
         .itemRow {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            display: flex;
+            flex-direction: column;
             gap: 12px;
-            align-items: end;
             background: white;
             border: 1px solid var(--border-gray);
             padding: 15px;
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .itemRow-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .itemRow-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 12px;
+        }
+
+        .itemRow-details label,
+        .itemRow-main label {
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .itemRow-details input {
+            padding: 10px 12px;
+            font-size: 14px;
         }
 
         .remove-btn {
@@ -199,17 +222,15 @@
         }
 
         @media (max-width: 900px) {
-            .itemRow {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
+            .itemRow-main {
+                grid-template-columns: 1fr;
             }
 
-            .itemRow>*:first-child {
-                grid-column: span 2;
+            .itemRow-details {
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .remove-btn {
-                grid-column: span 2;
                 height: auto;
                 padding: 12px;
             }
@@ -315,6 +336,11 @@
                     <label for="region">Region</label>
                     <input type="text" id="region" readonly placeholder="Auto-filled">
                 </div>
+
+                <div class="form-group">
+                    <label for="dispatchDays">Dispatch Days</label>
+                    <input type="text" id="dispatchDays" readonly placeholder="Auto-filled">
+                </div>
             </div>
 
             <h3>Order Items</h3>
@@ -323,6 +349,7 @@
             <div id="qtyTotal"></div>
 
             <datalist id="itemListData"></datalist>
+            <datalist id="schemaListData"></datalist>
 
             <div style="margin-top: 10px;">
                 <button type="button" class="btn add-btn" onclick="addItem()">+ Add Item</button>
@@ -340,6 +367,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_sTvtv6ElrVcP68ENsqiwC5QDeiXt9uUV0mnKAWOyQWZJPYFAsgKcVkgs3Gc1noc5SA/exec";
 
         let itemData = [];
+        let schemaList = [];
         let clientData = [];
 
         // ---------- Backend call helpers (google.script.run ki jagah fetch) ----------
@@ -407,14 +435,16 @@
             setStatus('Loading data...', false);
 
             try {
-                const [items, salesPersons, clients] = await Promise.all([
+                const [items, salesPersons, schemas, clients] = await Promise.all([
                     callGet('getItemData'),
                     callGet('getSalesPersons'),
+                    callGet('getSchemas'),
                     callGet('getClientData')
                 ]);
 
                 setItemData(items);
                 setSalesPersons(salesPersons);
+                setSchemaList(schemas);
                 setClientData(clients);
 
                 setStatus('', false);
@@ -433,6 +463,7 @@
                     document.getElementById('district').value         = selected[4] || '';
                     document.getElementById('state').value            = selected[5] || '';
                     document.getElementById('region').value           = selected[6] || '';
+                    document.getElementById('dispatchDays').value     = selected[10] || '';
                     document.getElementById('salesExecutive').value   = selected[7] || '';
                     document.getElementById('clientType').value       = selected[8] || '';
                     document.getElementById('creditDays').value       = selected[9] || '';
@@ -446,6 +477,7 @@
                     document.getElementById('district').value         = '';
                     document.getElementById('state').value            = '';
                     document.getElementById('region').value           = '';
+                    document.getElementById('dispatchDays').value     = '';
                     document.getElementById('salesExecutive').value   = '';
                     document.getElementById('clientType').value       = '';
                     document.getElementById('creditDays').value       = '';
@@ -482,6 +514,20 @@
                 opt.value = row[1];
                 dl.appendChild(opt);
             });
+            if (itemData.length > 0 && schemaList.length > 0 && document.querySelectorAll('.itemRow').length === 0) {
+                addItem();
+            }
+        }
+
+        function setSchemaList(list) {
+            schemaList = list;
+            const dl = document.getElementById('schemaListData');
+            dl.innerHTML = '';
+            schemaList.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                dl.appendChild(opt);
+            });
             if (itemData.length > 0 && document.querySelectorAll('.itemRow').length === 0) {
                 addItem();
             }
@@ -499,40 +545,41 @@
             });
         }
 
+        function makeField(labelText, name, opts) {
+            opts = opts || {};
+            const wrap = document.createElement('div');
+            const label = document.createElement('label');
+            label.textContent = labelText;
+            wrap.appendChild(label);
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = name;
+            input.placeholder = opts.placeholder || labelText;
+            if (opts.readOnly) input.readOnly = true;
+            if (opts.list) input.setAttribute('list', opts.list);
+            wrap.appendChild(input);
+            return { wrap, input };
+        }
+
         function addItem() {
             const itemsDiv = document.getElementById('items');
             const div = document.createElement('div');
             div.className = 'itemRow';
 
-            const col1 = document.createElement('div');
-            col1.innerHTML = '<label>Item Name</label>';
+            const mainRow = document.createElement('div');
+            mainRow.className = 'itemRow-main';
+
+            const nameField = document.createElement('div');
+            nameField.innerHTML = '<label>Item Name</label>';
             const itemInput = document.createElement('input');
             itemInput.setAttribute('list', 'itemListData');
             itemInput.name = 'itemName';
             itemInput.placeholder = 'Type to search...';
             itemInput.required = true;
-            col1.appendChild(itemInput);
+            nameField.appendChild(itemInput);
 
-            const col2 = document.createElement('div');
-            col2.innerHTML = '<label>SKU</label>';
-            const skuInput = document.createElement('input');
-            skuInput.type = 'text';
-            skuInput.name = 'sku';
-            skuInput.placeholder = 'SKU';
-            skuInput.readOnly = true;
-            col2.appendChild(skuInput);
-
-            const col3 = document.createElement('div');
-            col3.innerHTML = '<label>Category</label>';
-            const unitInput = document.createElement('input');
-            unitInput.type = 'text';
-            unitInput.name = 'unit';
-            unitInput.placeholder = 'Category';
-            unitInput.readOnly = true;
-            col3.appendChild(unitInput);
-
-            const col4 = document.createElement('div');
-            col4.innerHTML = '<label>Quantity</label>';
+            const qtyField = document.createElement('div');
+            qtyField.innerHTML = '<label>Quantity</label>';
             const qtyInput = document.createElement('input');
             qtyInput.type = 'number';
             qtyInput.name = 'qty';
@@ -541,29 +588,7 @@
             qtyInput.min = 1;
             qtyInput.addEventListener('wheel', function (e) { e.preventDefault(); });
             qtyInput.addEventListener('input', updateTotalQty);
-            col4.appendChild(qtyInput);
-
-            const col5 = document.createElement('div');
-            col5.innerHTML = '<label>Schema</label>';
-            const schemaInput = document.createElement('input');
-            schemaInput.type = 'text';
-            schemaInput.name = 'schema';
-            schemaInput.placeholder = 'Auto-filled';
-            schemaInput.readOnly = true;
-            col5.appendChild(schemaInput);
-
-            itemInput.oninput = function () {
-                const selected = itemData.find(r => r[1] === this.value);
-                if (selected) {
-                    skuInput.value    = selected[0] || '';
-                    unitInput.value   = selected[3] || '';
-                    schemaInput.value = selected[10] || '';
-                } else {
-                    skuInput.value    = '';
-                    unitInput.value   = '';
-                    schemaInput.value = '';
-                }
-            };
+            qtyField.appendChild(qtyInput);
 
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -578,12 +603,47 @@
                 }
             };
 
-            div.appendChild(col1);
-            div.appendChild(col2);
-            div.appendChild(col3);
-            div.appendChild(col4);
-            div.appendChild(col5);
-            div.appendChild(removeBtn);
+            mainRow.appendChild(nameField);
+            mainRow.appendChild(qtyField);
+            mainRow.appendChild(removeBtn);
+
+            const detailsRow = document.createElement('div');
+            detailsRow.className = 'itemRow-details';
+
+            const sku        = makeField('SKU', 'sku', { readOnly: true });
+            const category    = makeField('Category', 'unit', { readOnly: true });
+            const brand       = makeField('Brand Name', 'brand', { readOnly: true });
+            const under       = makeField('Under', 'under', { readOnly: true });
+            const subCategory = makeField('Sub Category', 'subCategory', { readOnly: true });
+            const paintType    = makeField('Paint Type', 'paintType', { readOnly: true });
+            const ltrKg        = makeField('Ltr/Kg', 'ltrKg', { readOnly: true });
+            const colour       = makeField('Colour', 'colour', { readOnly: true });
+            const schema       = makeField('Schema', 'schema', { list: 'schemaListData', placeholder: 'Select/Type Schema' });
+
+            [sku, category, brand, under, subCategory, paintType, ltrKg, colour, schema]
+                .forEach(f => detailsRow.appendChild(f.wrap));
+
+            itemInput.oninput = function () {
+                const selected = itemData.find(r => r[1] === this.value);
+                if (selected) {
+                    sku.input.value        = selected[0] || '';
+                    category.input.value   = selected[3] || '';
+                    brand.input.value      = selected[2] || '';
+                    under.input.value      = selected[4] || '';
+                    subCategory.input.value = selected[5] || '';
+                    paintType.input.value  = selected[6] || '';
+                    ltrKg.input.value      = selected[7] || '';
+                    colour.input.value     = selected[8] || '';
+                    schema.input.value     = selected[10] || '';
+                } else {
+                    sku.input.value = category.input.value = brand.input.value = under.input.value =
+                        subCategory.input.value = paintType.input.value = ltrKg.input.value =
+                        colour.input.value = schema.input.value = '';
+                }
+            };
+
+            div.appendChild(mainRow);
+            div.appendChild(detailsRow);
 
             itemsDiv.appendChild(div);
         }
@@ -606,6 +666,7 @@
             const parentDealerCode = document.getElementById('parentDealerCode').value.trim();
             const city            = document.getElementById('city').value.trim();
             const region          = document.getElementById('region').value.trim();
+            const dispatchDays    = document.getElementById('dispatchDays').value.trim();
 
             const missing = [];
             if (!orderNumber)    missing.push('Order Number');
@@ -621,6 +682,9 @@
             if (!address)        missing.push('Address');
             if (!leadTime)       missing.push('Lead Time');
             if (!salesExecutive) missing.push('Sales Executive');
+            if (!city)           missing.push('City');
+            if (!region)         missing.push('Region');
+            if (!dispatchDays)   missing.push('Dispatch Days');
 
             if (missing.length > 0) {
                 alert("Please fill the following required fields:\n• " + missing.join('\n• '));
@@ -634,11 +698,17 @@
             }
 
             const items = Array.from(itemRows).map(row => ({
-                name:   row.querySelector('[name=itemName]').value.trim(),
-                sku:    row.querySelector('[name=sku]').value.trim(),
-                unit:   row.querySelector('[name=unit]').value.trim(),
-                qty:    row.querySelector('[name=qty]').value,
-                schema: row.querySelector('[name=schema]').value.trim()
+                name:        row.querySelector('[name=itemName]').value.trim(),
+                sku:         row.querySelector('[name=sku]').value.trim(),
+                unit:        row.querySelector('[name=unit]').value.trim(),
+                brand:       row.querySelector('[name=brand]').value.trim(),
+                under:       row.querySelector('[name=under]').value.trim(),
+                subCategory: row.querySelector('[name=subCategory]').value.trim(),
+                paintType:   row.querySelector('[name=paintType]').value.trim(),
+                ltrKg:       row.querySelector('[name=ltrKg]').value.trim(),
+                colour:      row.querySelector('[name=colour]').value.trim(),
+                qty:         row.querySelector('[name=qty]').value,
+                schema:      row.querySelector('[name=schema]').value.trim()
             }));
 
             const missingQty = items.filter(i => i.name && (!i.qty || Number(i.qty) <= 0));
@@ -661,7 +731,7 @@
                     orderNumber, orderDate, clientCode, clientName, clientType,
                     phoneNo, state, district, creditDays, modeOfPayment,
                     address, leadTime, salesExecutive, items,
-                    parentDealerName, parentDealerCode, city, region
+                    parentDealerName, parentDealerCode, city, region, dispatchDays
                 });
                 alert("Order Submitted Successfully!");
                 window.location.reload();
