@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,7 +16,13 @@
             --text-muted: #6b7280;
             --border-gray: #e5e7eb;
             --danger: #ef4444;
+            --required-bg: #f5f3ff;
+            --required-border: #c7d2fe;
             --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -39,14 +45,27 @@
             padding: 44px 52px;
             box-shadow: var(--shadow);
             border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h2 {
             text-align: center;
             color: var(--text-dark);
-            margin-bottom: 35px;
+            margin-bottom: 8px;
             font-weight: 600;
             letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 30px;
         }
 
         h3 {
@@ -56,6 +75,9 @@
             border-bottom: 2px solid var(--border-gray);
             padding-bottom: 10px;
             margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .grid-form {
@@ -85,20 +107,49 @@
             border-radius: 10px;
             border: 1px solid var(--border-gray);
             background: white;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background-color 0.2s;
+        }
+
+        input:hover:not([readonly]):not(:focus),
+        select:hover:not(:focus) {
+            border-color: #a5b4fc;
         }
 
         input:focus,
         select:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+            transform: translateY(-1px);
         }
 
         input[readonly] {
             background-color: #f9fafb;
             color: var(--text-muted);
             cursor: not-allowed;
+        }
+
+        /* Highlight fields the user actually needs to fill in */
+        input[required]:not([readonly]),
+        select[required] {
+            background-color: var(--required-bg);
+            border: 1.5px solid var(--required-border);
+        }
+
+        input[required]:not([readonly]):focus,
+        select[required]:focus {
+            background-color: #ffffff;
+        }
+
+        input[required]:not([readonly])::placeholder {
+            color: #8b87d6;
+        }
+
+        .form-group label[data-required]::after,
+        .itemRow-main label[data-required]::after,
+        .itemRow-details label[data-required]::after {
+            content: " *";
+            color: var(--danger);
         }
 
         .btn {
@@ -116,15 +167,21 @@
         }
 
         .primary-btn {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             color: white;
             width: 100%;
             margin-top: 10px;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
         }
 
-        .primary-btn:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-1px);
+        .primary-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--primary-hover), #4338ca);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
+        }
+
+        .primary-btn:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         .primary-btn:disabled {
@@ -142,7 +199,10 @@
         }
 
         .add-btn:hover {
-            background-color: #f5f5ff;
+            background-color: var(--primary);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
         }
 
         .items-list {
@@ -160,11 +220,18 @@
             padding: 22px 24px;
             border-radius: 14px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .itemRow:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+            border-color: #c7d2fe;
         }
 
         .itemRow-main {
             display: grid;
-            grid-template-columns: minmax(240px, 2.4fr) minmax(120px, 1fr) auto;
+            grid-template-columns: minmax(220px, 2fr) minmax(100px, 0.8fr) minmax(150px, 1fr) auto;
             gap: 18px;
             align-items: end;
         }
@@ -199,7 +266,8 @@
             letter-spacing: 0.03em;
         }
 
-        .itemRow-details input {
+        .itemRow-details input,
+        .itemRow-main input {
             padding: 10px 12px;
             font-size: 14px;
         }
@@ -211,7 +279,7 @@
             border-radius: 8px;
             cursor: pointer;
             border: none;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.15s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -221,6 +289,7 @@
 
         .remove-btn:hover {
             background: #fecaca;
+            transform: scale(1.06);
         }
 
         #qtyTotal {
@@ -244,6 +313,10 @@
             .itemRow-details {
                 grid-template-columns: repeat(4, 1fr);
             }
+
+            .itemRow-main {
+                grid-template-columns: minmax(200px, 2fr) minmax(90px, 0.8fr) minmax(130px, 1fr) auto;
+            }
         }
 
         @media (max-width: 900px) {
@@ -252,7 +325,7 @@
             }
 
             .itemRow-main {
-                grid-template-columns: 1fr auto;
+                grid-template-columns: 1fr 1fr;
             }
 
             .itemRow-main>*:first-child {
@@ -275,21 +348,22 @@
     <div class="form-container">
         <form id="orderForm">
             <h2>Order Entry Form</h2>
+            <div class="subtitle">Fields highlighted in purple are required — please fill them in</div>
             <div id="loadStatus"></div>
 
             <div class="grid-form">
                 <div class="form-group">
-                    <label for="orderNumber">Order Number *</label>
+                    <label for="orderNumber" data-required>Order Number</label>
                     <input type="text" id="orderNumber" required placeholder="Enter Order #">
                 </div>
 
                 <div class="form-group">
-                    <label for="orderDate">Order Date *</label>
+                    <label for="orderDate" data-required>Order Date</label>
                     <input type="date" id="orderDate" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="clientName">Client Name *</label>
+                    <label for="clientName" data-required>Client Name</label>
                     <input list="clientNameList" id="clientName" required placeholder="Search by Client Name...">
                     <datalist id="clientNameList"></datalist>
                 </div>
@@ -325,7 +399,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="modeOfPayment">Mode of Payment *</label>
+                    <label for="modeOfPayment" data-required>Mode of Payment</label>
                     <input list="paymentModes" id="modeOfPayment" required placeholder="Select or Type Payment Mode">
                     <datalist id="paymentModes">
                         <option value="Full">
@@ -340,7 +414,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="leadTime">Lead Time (days) *</label>
+                    <label for="leadTime" data-required>Lead Time (days)</label>
                     <input type="number" id="leadTime" required min="1" placeholder="e.g. 7">
                 </div>
 
@@ -380,10 +454,9 @@
             <div id="items" class="items-list"></div>
 
             <div id="qtyTotal"></div>
-            <datalist id="schemaListData"></datalist>
 
             <datalist id="itemListData"></datalist>
-            
+
 
             <div style="margin-top: 10px;">
                 <button type="button" class="btn add-btn" onclick="addItem()">+ Add Item</button>
@@ -604,7 +677,7 @@
             mainRow.className = 'itemRow-main';
 
             const nameField = document.createElement('div');
-            nameField.innerHTML = '<label>Item Name</label>';
+            nameField.innerHTML = '<label>Item Name *</label>';
             const itemInput = document.createElement('input');
             itemInput.setAttribute('list', 'itemListData');
             itemInput.name = 'itemName';
@@ -613,7 +686,7 @@
             nameField.appendChild(itemInput);
 
             const qtyField = document.createElement('div');
-            qtyField.innerHTML = '<label>Quantity</label>';
+            qtyField.innerHTML = '<label>Quantity *</label>';
             const qtyInput = document.createElement('input');
             qtyInput.type = 'number';
             qtyInput.name = 'qty';
@@ -623,6 +696,18 @@
             qtyInput.addEventListener('wheel', function (e) { e.preventDefault(); });
             qtyInput.addEventListener('input', updateTotalQty);
             qtyField.appendChild(qtyInput);
+
+            // Scheme field sits right next to Quantity. It is always optional
+            // and starts out blank (NULL) - it is never auto-filled from the
+            // selected item, so the user picks/types it manually if needed.
+            const schemaField = document.createElement('div');
+            schemaField.innerHTML = '<label>Schema</label>';
+            const schemaInput = document.createElement('input');
+            schemaInput.setAttribute('list', 'schemaListData');
+            schemaInput.name = 'schema';
+            schemaInput.placeholder = 'Select/Type Schema';
+            schemaInput.value = '';
+            schemaField.appendChild(schemaInput);
 
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
@@ -639,6 +724,7 @@
 
             mainRow.appendChild(nameField);
             mainRow.appendChild(qtyField);
+            mainRow.appendChild(schemaField);
             mainRow.appendChild(removeBtn);
 
             const detailsRow = document.createElement('div');
@@ -652,9 +738,8 @@
             const paintType    = makeField('Paint Type', 'paintType', { readOnly: true });
             const ltrKg        = makeField('Ltr/Kg', 'ltrKg', { readOnly: true });
             const colour       = makeField('Colour', 'colour', { readOnly: true });
-            const schema       = makeField('Schema', 'schema', { list: 'schemaListData', placeholder: 'Select/Type Schema' });
 
-            [sku, category, brand, under, subCategory, paintType, ltrKg, colour, schema]
+            [sku, category, brand, under, subCategory, paintType, ltrKg, colour]
                 .forEach(f => detailsRow.appendChild(f.wrap));
 
             itemInput.oninput = function () {
@@ -668,11 +753,12 @@
                     paintType.input.value  = selected[6] || '';
                     ltrKg.input.value      = selected[7] || '';
                     colour.input.value     = selected[8] || '';
-                    schema.input.value     = selected[10] || '';
+                    // Note: Schema is intentionally left untouched here -
+                    // it always defaults to NULL/blank and is set manually.
                 } else {
                     sku.input.value = category.input.value = brand.input.value = under.input.value =
                         subCategory.input.value = paintType.input.value = ltrKg.input.value =
-                        colour.input.value = schema.input.value = '';
+                        colour.input.value = '';
                 }
             };
 
