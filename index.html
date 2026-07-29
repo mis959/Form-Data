@@ -817,19 +817,22 @@
                 return;
             }
 
-            const items = Array.from(itemRows).map(row => ({
-                name:        row.querySelector('[name=itemName]').value.trim(),
-                sku:         row.querySelector('[name=sku]').value.trim(),
-                unit:        row.querySelector('[name=unit]').value.trim(),
-                brand:       row.querySelector('[name=brand]').value.trim(),
-                under:       row.querySelector('[name=under]').value.trim(),
-                subCategory: row.querySelector('[name=subCategory]').value.trim(),
-                paintType:   row.querySelector('[name=paintType]').value.trim(),
-                ltrKg:       row.querySelector('[name=ltrKg]').value.trim(),
-                colour:      row.querySelector('[name=colour]').value.trim(),
-                qty:         row.querySelector('[name=qty]').value,
-                schema:      row.querySelector('[name=schema]').value.trim()
-            }));
+            const items = Array.from(itemRows).map(row => {
+                const schemaValue = row.querySelector('[name=schema]').value.trim();
+                return {
+                    name:        row.querySelector('[name=itemName]').value.trim(),
+                    sku:         row.querySelector('[name=sku]').value.trim(),
+                    unit:        row.querySelector('[name=unit]').value.trim(),
+                    brand:       row.querySelector('[name=brand]').value.trim(),
+                    under:       row.querySelector('[name=under]').value.trim(),
+                    subCategory: row.querySelector('[name=subCategory]').value.trim(),
+                    paintType:   row.querySelector('[name=paintType]').value.trim(),
+                    ltrKg:       row.querySelector('[name=ltrKg]').value.trim(),
+                    colour:      row.querySelector('[name=colour]').value.trim(),
+                    qty:         row.querySelector('[name=qty]').value,
+                    schema:      schemaValue === '' ? null : schemaValue
+                };
+            });
 
             const missingQty = items.filter(i => i.name && (!i.qty || Number(i.qty) <= 0));
             if (missingQty.length > 0) {
